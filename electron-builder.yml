@@ -1,0 +1,66 @@
+appId: com.cwos.local-bridge
+productName: CWOS Local Bridge
+copyright: Copyright © 2025 CWOS Lab
+
+directories:
+  buildResources: resources
+  output: dist
+
+files:
+  - out/**/*
+  - "!out/**/*.map"
+
+extraResources:
+  - from: resources/tray-iconTemplate.png
+    to: tray-iconTemplate.png
+  - from: resources/tray-iconTemplate@2x.png
+    to: tray-iconTemplate@2x.png
+
+afterSign: build/notarize.js
+
+mac:
+  target:
+    - target: dmg
+      arch: arm64
+    - target: dmg
+      arch: x64
+  category: public.app-category.developer-tools
+  # icon.icns is pre-built and committed to resources/icon.icns (11 sizes: 16–1024 px).
+  # electron-builder auto-detects it from the buildResources directory (resources/).
+  # No macOS-only sips/iconutil tooling is required in CI.
+  # To regenerate: run tools/cwos-local-bridge/scripts/gen-icns.py
+  # Signing: set CSC_LINK + CSC_KEY_PASSWORD env vars (base64-encoded .p12).
+  # For unsigned local builds: set CSC_IDENTITY_AUTO_DISCOVERY=false.
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  darkModeSupport: true
+  extendInfo:
+    LSUIElement: 1
+
+dmg:
+  title: CWOS Local Bridge
+  window:
+    width: 600
+    height: 400
+  contents:
+    - x: 190
+      y: 240
+    - x: 410
+      y: 240
+      type: link
+      path: /Applications
+
+nsis:
+  oneClick: false
+  perMachine: false
+
+publish:
+  # electron-updater reads these values at runtime to locate GitHub Releases.
+  # They MUST match the GitHub org/repo where `build-mac.yml` publishes releases,
+  # otherwise auto-update checks will silently hit the wrong (or non-existent) repo.
+  # build-mac.yml validates this at CI time: it compares owner/repo against
+  # $GITHUB_REPOSITORY and fails the build if they differ.
+  - provider: github
+    owner: alexanderlebrun-cloud
+    repo: local-bridge
